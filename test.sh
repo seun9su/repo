@@ -13,7 +13,7 @@ cpu_idle=$(mpstat 1 5 | tail -n 1 | awk '{print $NF}')
 # cpu_idle=$$(iostat 1 6 | awk 'NR >= 4 {sum += $NF} END{print sum/5.0}')
 ## Mac
 # cpu_idle=$(iostat 1 6 | awk 'NR >= 4 {sum += $(NF-3)} END{print sum/5.0}')
-# is_alert=$(echo "$cpu_idle < $idle_limit" | bc)
+is_alert=$(echo "$cpu_idle < $idle_limit" | bc)
 
 ## integer for expr
 ## float for bc
