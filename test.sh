@@ -1,13 +1,12 @@
-commname="/usr/sbin/httpd"
-## Linux
-start="service httpd start"
-# Mac/FreeBSD
-start="/usr/sbin/apachectl start"
-# 감시 대상 명령어 프로세스 수 카운트
-count=$(ps ax -o command | grep "$commname" | grep -v "^grep" | wc -l)
-if [ "$count" -eq 0 ]; then
+## Linux 
+# swapcount=$(vmstat 1 6 | awk 'NR >= 4 {sum += $7 + $8} END{print sum}')
+# swap in/out check for 6 times per 1 sec
+## FreeBSD
+# swapcount=$(vmstat 1 6 | awk 'NR >= 4 {sum += $8 + $9} END{print sum}')
+## Mac
+swapcount=$(vm_stat -c 6 1 | awk 'NR >= 4 {sum += $21 + $22} END{print sum}')
+if [ "$swapcount" -ge "$swapcount_limit" ]; then
   date_str=$(date '+%Y/%m/%d %H:%M:%S')
-  echo "[$date_str] Can't find process $commname." >&2
-  echo "[$date_str] Execute process $commname." >&2
-  $start
+  echo "[$date_str] Swap Alert: $swapcount (si+so)"
+  # ./alert.sh
 fi
