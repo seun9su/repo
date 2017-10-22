@@ -1,22 +1,24 @@
 #!/bin/sh
-# Use: vmstat, awk, data, echo
-# 사용처: 남은 메모리를 정기적으로 감시해서 스왑이 발생하면 경고하고 싶을 때
+# Use: mpstat, tail, awk, echo, date, iostat
+# 사용처: CPU 부하를 정기적으로 감시해서 idle 값이 낮아지면 경고를 출력하고 싶을 때
 # 실행 예제
-# ./swapcheck.sh
+# ./cpu-idlecheck.sh
 
-# 감시할 스왑 발생 횟수. 이 숫자를 넘기면 경고
-swapcount_limit=10
+idle_limit=10.0
 
-## Linux 
-swapcount=$(vmstat 1 6 | awk 'NR >= 4 {sum += $7 + $8} END{print sum}')
-# swap in/out check for 6 times per 1 sec
+## Average value in linux
+cpu_idle=$(mpstat 1 5 | tail -n 1 | awk '{print $NF}')
+## NF - Last Column
 ## FreeBSD
-# swapcount=$(vmstat 1 6 | awk 'NR >= 4 {sum += $8 + $9} END{print sum}')
+# cpu_idle=$$(iostat 1 6 | awk 'NR >= 4 {sum += $NF} END{print sum/5.0}')
 ## Mac
-#swapcount=$(vm_stat -c 6 1 | awk 'NR >= 4 {sum += $21 + $22} END{print sum}')
+# cpu_idle=$(iostat 1 6 | awk 'NR >= 4 {sum += $(NF-3)} END{print sum/5.0}')
+# is_alert=$(echo "$cpu_idle < $idle_limit" | bc)
 
-if [ "$swapcount" -ge "$swapcount_limit" ]; then
+## integer for expr
+## float for bc
+if [ "$is_alert" -eq 1 ]; then
   date_str=$(date '+%Y/%m/%d %H:%M:%S')
-  echo "[$date_str] Swap Alert: $swapcount (si+so)"
+  echo "[$date_str] CPU %idle Alert: $cpu_idle (%)"
   # ./alert.sh
 fi
